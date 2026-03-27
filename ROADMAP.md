@@ -33,6 +33,7 @@ flowchart TD
 
     style Boss fill:#e3f2fd
     style MCP fill:#f3e5f5
+```
 
 ## Core Design Principles
 
