@@ -9,6 +9,31 @@ The primary focus is **visibility** — knowing where things stand across your s
 
 It works seamlessly for a single developer with multiple machines as well as larger setups.
 
+## How SwarmCom Works
+
+SwarmCom sits in the middle as a thin communication layer:
+
+```mermaid
+flowchart TD
+    subgraph "SwarmCom Network"
+        MCP["MCP Server\n(WebSocket)"] 
+        Backbone["Communication Backbone"]
+    end
+
+    subgraph "Nodes"
+        Boss["Boss Node\n(Cursor / Claude)"]
+        Worker1["Worker Node\n(OpenClaw 1)"]
+        Worker2["Worker Node\n(OpenClaw 2)"]
+    end
+
+    MCP <--> Backbone
+    Boss <--> MCP
+    Worker1 <--> MCP
+    Worker2 <--> MCP
+
+    style Boss fill:#e3f2fd
+    style MCP fill:#f3e5f5
+
 ## Core Design Principles
 
 - **Visibility first**: Fast, aggregated status across all connected nodes.
