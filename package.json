@@ -1,0 +1,40 @@
+{
+  "name": "swarmcom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lightweight communication and status coordination layer for agent systems.",
+  "main": "dist/index.js",
+  "bin": {
+    "swarmcom": "dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli/index.ts",
+    "quickstart": "tsx src/cli/index.ts quickstart",
+    "matrix:generate": "mkdir -p ./.swarmcom/matrix/data && docker run --rm -e SYNAPSE_SERVER_NAME=localhost -e SYNAPSE_REPORT_STATS=no -v \"$PWD/.swarmcom/matrix/data:/data\" matrixdotorg/synapse:latest generate",
+    "matrix:up": "docker compose -f docker-compose.matrix.yml up -d",
+    "matrix:down": "docker compose -f docker-compose.matrix.yml down",
+    "matrix:logs": "docker compose -f docker-compose.matrix.yml logs -f synapse",
+    "start": "node dist/cli/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "matrix",
+    "agents",
+    "status",
+    "coordination"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
+  }
+}

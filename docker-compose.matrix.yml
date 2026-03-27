@@ -1,0 +1,12 @@
+services:
+  synapse:
+    image: matrixdotorg/synapse:latest
+    container_name: swarmcom-synapse
+    restart: unless-stopped
+    environment:
+      SYNAPSE_SERVER_NAME: localhost
+      SYNAPSE_REPORT_STATS: "no"
+    volumes:
+      - ./.swarmcom/matrix/data:/data
+    ports:
+      - "8008:8008"

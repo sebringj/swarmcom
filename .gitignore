@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.swarmcom/
+coverage/
+*.log
+*.db
+*.sqlite
+
+# Local status and runtime files
+swarm-status.json
+STATUS.md
+swarmcom-network.json
