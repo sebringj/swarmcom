@@ -2,7 +2,7 @@
 
 **The communication backbone for your multi-machine agent swarm.**
 
-![SwarmCom Logo](fbb86f04-6a62-4dce-b407-8132f660375b.jpg)
+<img src="fbb86f04-6a62-4dce-b407-8132f660375b.jpg" alt="SwarmCom Logo" height="120" width="auto">
 
 Turn multiple independent systems (Cursor, OpenClaw instances, Claude Code, Autonomo, etc.) into one coherent, coordinated team — with almost zero manual glue.
 
