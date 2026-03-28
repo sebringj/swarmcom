@@ -11,13 +11,14 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/cli/index.ts",
     "quickstart": "tsx src/cli/index.ts quickstart",
-    "matrix:generate": "mkdir -p ./.swarmcom/matrix/data && docker run --rm -e SYNAPSE_SERVER_NAME=localhost -e SYNAPSE_REPORT_STATS=no -v \"$PWD/.swarmcom/matrix/data:/data\" matrixdotorg/synapse:latest generate",
+    "matrix:generate": "mkdir -p ./.swarmcom/matrix/data && docker run --rm -e SYNAPSE_SERVER_NAME=localhost -e SYNAPSE_REPORT_STATS=no -v \"/Users/jasonsebring/Development/Projects/swarmcom/.swarmcom/matrix/data:/data\" matrixdotorg/synapse:latest generate && echo \"\\nenable_registration: true\\nenable_registration_without_verification: true\\n\" >> ./.swarmcom/matrix/data/homeserver.yaml",
     "matrix:up": "docker compose -f docker-compose.matrix.yml up -d",
     "matrix:down": "docker compose -f docker-compose.matrix.yml down",
     "matrix:logs": "docker compose -f docker-compose.matrix.yml logs -f synapse",
     "start": "node dist/cli/index.js",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "matrix:verify": "tsx scripts/verify-local-matrix.ts"
   },
   "keywords": [
     "mcp",
@@ -29,6 +30,7 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.7",
+    "matrix-js-sdk": "^41.2.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -29,12 +29,20 @@ Generate Synapse config:
 ```bash
 npm run matrix:generate
 ```
+*(This automatically adds local registration overrides to your config).*
 
 Start Synapse:
 
 ```bash
 npm run matrix:up
 ```
+
+Verify Synapse:
+
+```bash
+npm run matrix:verify
+```
+*(This runs a fully automated end-to-end connection check against your local server).*
 
 Stop Synapse:
 
