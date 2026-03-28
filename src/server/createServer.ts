@@ -7,10 +7,12 @@ import { OpenClawBridgeAdapter } from "../adapters/openclaw/bridgeAdapter";
 import { MessagingService } from "../services/messagingService";
 import { NetworkService } from "../services/networkService";
 import { StatusService } from "../services/statusService";
+import { DatabaseService } from "../db/database";
 
 export type SwarmServer = {
   environment: ReturnType<typeof loadEnvironment>;
   networkConfig: ReturnType<typeof loadNetworkConfig>;
+  dbService: DatabaseService;
   statusService: StatusService;
   networkService: NetworkService;
   messagingService: MessagingService;
@@ -23,13 +25,16 @@ export type SwarmServer = {
 export function createServer(configPath: string): SwarmServer {
   const environment = loadEnvironment();
   const networkConfig = loadNetworkConfig(configPath);
-  const statusService = new StatusService();
+  
+  const dbService = new DatabaseService({ filePath: "./.swarmcom/db/swarmcom.sqlite" });
+  const statusService = new StatusService(dbService);
   const networkService = new NetworkService(statusService);
-  const messagingService = new MessagingService();
+  const messagingService = new MessagingService(dbService);
 
   return {
     environment,
     networkConfig,
+    dbService,
     statusService,
     networkService,
     messagingService,

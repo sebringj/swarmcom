@@ -7,6 +7,7 @@ import { createDefaultNetworkConfig, loadNetworkConfig, networkConfigExists, sav
 import { StatusSnapshot, statusSnapshotSchema } from "../domain/status";
 import { createServer } from "../server/createServer";
 import { StatusService } from "../services/statusService";
+import { DatabaseService } from "../db/database";
 
 type Flags = Record<string, string | boolean>;
 
@@ -79,7 +80,8 @@ function initializeProject(flags: Flags, mode: "init" | "quickstart"): void {
 
   saveNetworkConfig(configPath, config);
 
-  const statusService = new StatusService();
+  const dbService = new DatabaseService({ filePath: "./.swarmcom/db/swarmcom.sqlite" });
+  const statusService = new StatusService(dbService);
   const initialStatus: StatusSnapshot = statusSnapshotSchema.parse({
     nodeId: config.nodeId,
     summary: "Initialized",
@@ -132,7 +134,8 @@ function updateStatusCommand(flags: Flags): void {
   const env = loadEnvironment();
   const statusPath = resolve(env.SWARMCOM_STATUS_FILE);
   const humanStatusPath = resolve(env.SWARMCOM_HUMAN_STATUS_FILE);
-  const statusService = new StatusService();
+  const dbService = new DatabaseService({ filePath: "./.swarmcom/db/swarmcom.sqlite" });
+  const statusService = new StatusService(dbService);
   const current = statusService.loadSnapshot(statusPath);
 
   if (!current) {
@@ -160,7 +163,8 @@ function updateStatusCommand(flags: Flags): void {
 
 function statusCommand(): void {
   const env = loadEnvironment();
-  const statusService = new StatusService();
+  const dbService = new DatabaseService({ filePath: "./.swarmcom/db/swarmcom.sqlite" });
+  const statusService = new StatusService(dbService);
   const status = statusService.loadSnapshot(resolve(env.SWARMCOM_STATUS_FILE));
 
   if (!status) {
@@ -173,7 +177,8 @@ function statusCommand(): void {
 function summaryCommand(flags: Flags): void {
   const env = loadEnvironment();
   const config = loadNetworkConfig(resolve(getFlag(flags, "config") ?? env.SWARMCOM_NETWORK_FILE));
-  const statusService = new StatusService();
+  const dbService = new DatabaseService({ filePath: "./.swarmcom/db/swarmcom.sqlite" });
+  const statusService = new StatusService(dbService);
   const server = createServer(resolve(getFlag(flags, "config") ?? env.SWARMCOM_NETWORK_FILE));
   const childSummaries = server.networkService.summarizeChildren(config.children);
   const selfStatus = statusService.loadSnapshot(config.statusFile);

@@ -2,8 +2,15 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 import { StatusHistoryEntry, StatusSnapshot, NodeSummary, nodeSummarySchema, statusHistoryEntrySchema, statusSnapshotSchema } from "../domain/status";
+import { DatabaseService } from "../db/database";
 
 export class StatusService {
+  private dbService?: DatabaseService;
+
+  constructor(dbService?: DatabaseService) {
+    this.dbService = dbService;
+  }
+
   public loadSnapshot(filePath: string): StatusSnapshot | null {
     const absolutePath = resolve(filePath);
     if (!existsSync(absolutePath)) {
@@ -18,6 +25,26 @@ export class StatusService {
     const absolutePath = resolve(filePath);
     mkdirSync(dirname(absolutePath), { recursive: true });
     writeFileSync(absolutePath, `${JSON.stringify(statusSnapshotSchema.parse(snapshot), null, 2)}\n`, "utf8");
+
+    if (this.dbService) {
+      try {
+        const stmt = this.dbService.getDb().prepare(`
+          INSERT INTO status_updates (created_at, node_id, state, summary, current_task, blockers, metadata)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        stmt.run(
+          snapshot.updatedAt,
+          snapshot.nodeId,
+          snapshot.state,
+          snapshot.summary,
+          snapshot.currentTask || null,
+          JSON.stringify(snapshot.blockers),
+          JSON.stringify(snapshot.metadata)
+        );
+      } catch (err) {
+        console.error("Failed to write status to DB:", err);
+      }
+    }
   }
 
   public appendHistory(historyFilePath: string, entry: StatusHistoryEntry): void {
@@ -29,14 +56,34 @@ export class StatusService {
     writeFileSync(absolutePath, `${JSON.stringify(history.slice(0, 50), null, 2)}\n`, "utf8");
   }
 
-  public loadHistory(historyFilePath: string): StatusHistoryEntry[] {
+  public loadHistory(historyFilePath: string, limit = 50): StatusHistoryEntry[] {
+    if (this.dbService) {
+      try {
+        const stmt = this.dbService.getDb().prepare(`
+          SELECT created_at, state, summary, summary as message
+          FROM status_updates
+          ORDER BY created_at DESC
+          LIMIT ?
+        `);
+        const rows = stmt.all(limit) as any[];
+        return rows.map((row) => ({
+          timestamp: row.created_at,
+          state: row.state as any,
+          summary: row.summary,
+          message: row.message
+        }));
+      } catch (err) {
+        console.error("Failed to query DB for history:", err);
+      }
+    }
+
     const absolutePath = resolve(historyFilePath);
     if (!existsSync(absolutePath)) {
       return [];
     }
 
     const raw = JSON.parse(readFileSync(absolutePath, "utf8")) as unknown;
-    return Array.isArray(raw) ? raw.map((entry) => statusHistoryEntrySchema.parse(entry)) : [];
+    return Array.isArray(raw) ? raw.map((entry) => statusHistoryEntrySchema.parse(entry)).slice(0, limit) : [];
   }
 
   public renderHumanStatus(snapshot: StatusSnapshot): string {
