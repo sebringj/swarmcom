@@ -6,6 +6,7 @@ import { loadEnvironment } from "../config/env";
 import { createDefaultNetworkConfig, loadNetworkConfig, networkConfigExists, saveNetworkConfig } from "../config/networkConfig";
 import { StatusSnapshot, statusSnapshotSchema } from "../domain/status";
 import { createServer } from "../server/createServer";
+import { generateKeyPairSync } from "node:crypto";
 import { StatusService } from "../services/statusService";
 import { DatabaseService } from "../db/database";
 
@@ -49,6 +50,7 @@ Commands:
   swarmcom status
   swarmcom summary
   swarmcom serve
+  swarmcom generate-identity
 `);
 }
 
@@ -234,6 +236,18 @@ function main(): void {
         return;
       case "serve":
         serveCommand(flags);
+        return;
+      case "generate-identity":
+        {
+          const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+          const privPem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+          const pubPem = publicKey.export({ type: "spki", format: "pem" }).toString();
+          console.log("Keys successfully generated for Ed25519 Identity!\n");
+          console.log("=== PUBLIC KEY (Share this with peers or boss) ===");
+          console.log(pubPem);
+          console.log("=== PRIVATE KEY (Keep this secret, put it in SWARMCOM_PRIVATE_KEY) ===");
+          console.log(privPem);
+        }
         return;
       case "help":
       case "--help":

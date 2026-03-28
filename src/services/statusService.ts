@@ -60,17 +60,21 @@ export class StatusService {
     if (this.dbService) {
       try {
         const stmt = this.dbService.getDb().prepare(`
-          SELECT created_at, state, summary, summary as message
+          SELECT created_at, node_id, state, summary, current_task, blockers, metadata
           FROM status_updates
           ORDER BY created_at DESC
           LIMIT ?
         `);
         const rows = stmt.all(limit) as any[];
         return rows.map((row) => ({
-          timestamp: row.created_at,
+          nodeId: row.node_id,
           state: row.state as any,
           summary: row.summary,
-          message: row.message
+          currentTask: row.current_task || undefined,
+          blockers: JSON.parse(row.blockers || "[]"),
+          updatedAt: row.created_at,
+          metadata: JSON.parse(row.metadata || "{}"),
+          recordedAt: row.created_at
         }));
       } catch (err) {
         console.error("Failed to query DB for history:", err);

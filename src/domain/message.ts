@@ -7,7 +7,8 @@ export const messageEnvelopeSchema = z.object({
   signerNodeId: z.string().min(1),
   channel: z.string().min(1),
   signedAt: z.string().datetime(),
-  signature: z.string().min(1)
+  signature: z.string().min(1),
+  authMode: z.enum(["shared_secret", "ed25519", "jwt"]).default("shared_secret")
 });
 
 export type MessageEnvelope = z.infer<typeof messageEnvelopeSchema>;

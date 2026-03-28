@@ -4,4 +4,5 @@ export * from "./domain/node";
 export * from "./domain/status";
 export * from "./domain/message";
 export * from "./config/networkConfig";
-export * from "./utils/channelAuth";
+export * from "./auth/authFactory";
+export * from "./auth/authStrategy";

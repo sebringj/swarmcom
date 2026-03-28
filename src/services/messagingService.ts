@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { MessageRecord, messageRecordSchema } from "../domain/message";
-import { signMessageEnvelope, verifyMessageEnvelope } from "../utils/channelAuth";
+import { AuthFactory, AuthMode } from "../auth/authFactory";
 import { DatabaseService } from "../db/database";
 
 export class MessagingService {
@@ -19,16 +19,26 @@ export class MessagingService {
     });
   }
 
-  public createSignedMessage(input: Omit<MessageRecord, "id" | "createdAt" | "envelope">, signerNodeId: string, sharedSecret: string): MessageRecord {
+  public createSignedMessage(
+    input: Omit<MessageRecord, "id" | "createdAt" | "envelope">, 
+    signerNodeId: string, 
+    credential?: string,
+    authMode: AuthMode = "shared_secret"
+  ): MessageRecord {
     const base = this.createMessage(input);
+    const strategy = AuthFactory.create(authMode);
+    
     return messageRecordSchema.parse({
       ...base,
-      envelope: signMessageEnvelope(base, signerNodeId, sharedSecret)
+      envelope: strategy.sign(base, signerNodeId, credential)
     });
   }
 
-  public verifyMessage(record: MessageRecord, sharedSecret: string): boolean {
-    return verifyMessageEnvelope(record, sharedSecret);
+  public verifyMessage(record: MessageRecord, credential?: string): boolean {
+    if (!record.envelope) return false;
+    const authMode = (record.envelope.authMode as AuthMode) || "shared_secret";
+    const strategy = AuthFactory.create(authMode);
+    return strategy.verify(record, credential);
   }
 
   public storeMessage(record: MessageRecord, roomId?: string): void {
@@ -42,10 +52,10 @@ export class MessagingService {
       stmt.run(
         record.id,
         record.createdAt,
-        record.senderId,
-        record.role,
+        record.fromNodeId,
+        record.targetRole || null,
         roomId || null,
-        JSON.stringify(record.payload),
+        JSON.stringify(record),
         record.envelope?.signature || null
       );
     } catch (err) {
@@ -61,17 +71,7 @@ export class MessagingService {
         SELECT * FROM messages ORDER BY created_at DESC LIMIT 100
       `);
       const rows = stmt.all() as any[];
-      return rows.map((row) => ({
-        id: row.id,
-        createdAt: row.created_at,
-        senderId: row.sender_id,
-        role: row.role,
-        payload: JSON.parse(row.payload),
-        envelope: row.signature ? {
-          signature: row.signature,
-          algorithm: "HS256"
-        } : undefined
-      })) as MessageRecord[];
+      return rows.map((row) => JSON.parse(row.payload)) as MessageRecord[];
     } catch (err) {
       console.error("Failed to get messages from DB:", err);
       return [];
